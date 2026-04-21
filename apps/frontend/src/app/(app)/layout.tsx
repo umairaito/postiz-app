@@ -97,7 +97,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <DubAnalytics />
             <FacebookComponent />
             <Plausible
-              domain={false}
+              domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || 'localhost'}
+              enabled={!!process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
             >
               <PHProvider
                 phkey={process.env.NEXT_PUBLIC_POSTHOG_KEY}
