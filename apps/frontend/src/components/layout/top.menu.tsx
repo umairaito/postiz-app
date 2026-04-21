@@ -58,6 +58,7 @@ export const useMenuItem = () => {
     },
     {
       name: 'Agent',
+      hide: true, // Reputably: Posting is a scoped module — no AI agent surface.
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -118,6 +119,7 @@ export const useMenuItem = () => {
     },
     {
       name: t('plugs', 'Plugs'),
+      hide: true, // Reputably: upstream "plugs" workflows not exposed.
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -163,6 +165,7 @@ export const useMenuItem = () => {
   const secondMenu = [
     {
       name: t('UGC', 'UGC'),
+      hide: true, // Reputably: UGC tooling not in scope.
       icon: (
         <svg
           fill="#c52e2e"
@@ -196,6 +199,7 @@ export const useMenuItem = () => {
     },
     {
       name: t('affiliate', 'Affiliate'),
+      hide: true, // Reputably: upstream affiliate program not ours to promote.
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -254,6 +258,8 @@ export const useMenuItem = () => {
     },
     {
       name: t('billing', 'Billing'),
+      hide: true, // Reputably: billing is handled by the parent app; posting
+                  // runs as a bundled feature with no per-seat pricing here.
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"

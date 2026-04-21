@@ -85,29 +85,14 @@ export const SettingsPopup: FC<{
 
   const t = useT();
   const list = useMemo(() => {
+    // Reputably: Posting ships as a scoped module, so the settings area
+    // surfaces only profile + connected third-party app approvals. Upstream
+    // tabs (teams, webhooks, autopost, sets, signatures, developer API) are
+    // kept in the codebase but not exposed here; re-enable by restoring the
+    // original conditional pushes below.
     const arr = [];
     arr.push({ tab: 'global_settings', label: t('global_settings', 'Global Settings') });
-    // Populate tabs based on user permissions
-    if (user?.tier?.team_members && isGeneral) {
-      arr.push({ tab: 'teams', label: t('teams', 'Teams') });
-    }
-    if (user?.tier?.webhooks) {
-      arr.push({ tab: 'webhooks', label: t('webhooks_1', 'Webhooks') });
-    }
-    if (user?.tier?.autoPost) {
-      arr.push({ tab: 'autopost', label: t('auto_post', 'Auto Post') });
-    }
-    if (user?.tier.current !== 'FREE') {
-      arr.push({ tab: 'sets', label: t('sets', 'Sets') });
-    }
-    if (user?.tier.current !== 'FREE') {
-      arr.push({ tab: 'signatures', label: t('signatures', 'Signatures') });
-    }
-    if (user?.tier?.public_api && isGeneral && showLogout) {
-      arr.push({ tab: 'api', label: t('developers', 'Developers') });
-    }
     arr.push({ tab: 'approved_apps', label: t('approved_apps', 'Approved Apps') });
-
     return arr;
   }, [user, isGeneral, showLogout, t]);
 
