@@ -1,3 +1,29 @@
+# Reputably Posting (fork of postiz-app)
+
+This is a fork of [gitroomhq/postiz-app](https://github.com/gitroomhq/postiz-app) rebranded as **Reputably Posting**, the content-scheduling module inside the Reputably reputation-management product.
+
+Licensed under **GNU AGPL v3** (same as upstream). Modifications in this fork are available publicly at https://github.com/umairaito/postiz-app/tree/reputably-rebrand. If you use this software over a network, you are obligated to make source available to your users per AGPL §13.
+
+Upstream: https://github.com/gitroomhq/postiz-app
+
+## Summary of changes in this fork
+
+- Replaced `postiz.svg` and `postiz-text.svg` logo assets with Reputably branding.
+- Swapped user-facing "Postiz" copy to "Reputably" across frontend components, pages, translations, and email workflows.
+- Removed upstream's Plausible Analytics `postiz.com` tracking domain (privacy: we don't want our users' telemetry sent to postiz's account).
+- Kept upstream's `@gitroom/*` package-name imports, SDK package names, and Chrome extension as-is — those are internal / separately-published.
+
+## Build
+
+`docker build -f Dockerfile.dev -t ghcr.io/umairaito/reputably-posting:<tag> .`
+
+---
+
+Original postiz README follows below for completeness.
+
+---
+
+<p align="center">
 <p align="center">
   <a href="https://postiz.com/" target="_blank">
   <picture>
