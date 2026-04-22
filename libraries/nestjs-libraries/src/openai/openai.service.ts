@@ -18,18 +18,29 @@ const VoicePrompt = z.object({
 
 @Injectable()
 export class OpenaiService {
-  async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
+  async generateImage(prompt: string, _isUrl: boolean, isVertical = false) {
+    // OpenAI's new image models (gpt-image-1, gpt-image-1.5, gpt-image-2)
+    // drop the legacy `response_format` param — passing it now fails with
+    // "Unknown parameter: 'response_format'". They always return b64_json.
+    // If/when we want URLs, we can upload the b64 to our storage and hand
+    // back a URL from there.
+    //
+    // gpt-image-1.5 is the highest-tier image model that doesn't require
+    // OpenAI org verification. Upgrade to gpt-image-2 once the org is
+    // verified at https://platform.openai.com/settings/organization/general.
+    //
+    // Size range for new image models: 1024x1024, 1024x1536, 1536x1024, auto.
+    // The old dall-e-3 vertical size 1024x1792 is NOT valid here.
     const generate = (
       await openai.images.generate({
         prompt,
-        response_format: isUrl ? 'url' : 'b64_json',
-        model: 'gpt-image-2',
+        model: 'gpt-image-1.5',
         quality: 'medium',
-        ...(isVertical ? { size: '1024x1792' } : {}),
+        ...(isVertical ? { size: '1024x1536' } : {}),
       } as any)
     ).data[0];
 
-    return isUrl ? generate.url : generate.b64_json;
+    return generate.b64_json;
   }
 
   async generatePromptForPicture(prompt: string) {
