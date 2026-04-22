@@ -676,12 +676,12 @@ export const AddProviderComponent: FC<{
             // anyone try to connect an unsupported platform.
             .slice()
             .sort((a, b) => {
-              const aGmb = a.identifier === 'google_my_business' ? -1 : 0;
-              const bGmb = b.identifier === 'google_my_business' ? -1 : 0;
+              const aGmb = a.identifier === 'gmb' ? -1 : 0;
+              const bGmb = b.identifier === 'gmb' ? -1 : 0;
               return aGmb - bGmb;
             })
             .map((item) => {
-              const isEnabled = item.identifier === 'google_my_business';
+              const isEnabled = item.identifier === 'gmb';
               return (
               <div
                 key={item.identifier}
@@ -725,7 +725,7 @@ export const AddProviderComponent: FC<{
                     <img
                       className={clsx(
                         'w-[32px] h-[32px]',
-                        item.identifier !== 'google_my_business' &&
+                        item.identifier !== 'gmb' &&
                           'rounded-full'
                       )}
                       src={`/icons/platforms/${item.identifier}.png`}
