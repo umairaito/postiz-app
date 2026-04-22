@@ -1,0 +1,59 @@
+name: Build Reputably image
+
+# Builds the rebranded postiz image on every push to reputably-rebrand and
+# publishes it to ghcr.io/umairaito/postiz-app with two tags:
+#   - reputably-<short-sha>  (immutable, pin this on the VPS .env)
+#   - reputably-latest       (rolling, for convenience)
+#
+# amd64 only — the Reputably production VPS (Contabo) is x86. Add linux/arm64
+# here if we ever deploy to an arm host.
+
+on:
+  push:
+    branches:
+      - reputably-rebrand
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags
+        id: meta
+        run: |
+          sha_short=$(git rev-parse --short HEAD)
+          echo "sha_short=$sha_short" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${{ github.repository_owner }}/postiz-app" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.dev
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          sbom: false
+          build-args: |
+            NEXT_PUBLIC_VERSION=reputably-${{ steps.meta.outputs.sha_short }}
+          tags: |
+            ${{ steps.meta.outputs.image }}:reputably-${{ steps.meta.outputs.sha_short }}
+            ${{ steps.meta.outputs.image }}:reputably-latest
