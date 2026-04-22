@@ -498,6 +498,20 @@ export const AddProviderComponent: FC<{
             return;
           }
 
+          // When Reputably iframes this app, a same-frame redirect to
+          // accounts.google.com (or any OAuth IdP that sends
+          // X-Frame-Options: DENY) renders as Google's generic "you do not
+          // have access to this document" 403. Pop a new tab so the IdP
+          // gets a top-level window. After OAuth completes, the IdP
+          // redirects to our /integrations/social/<provider> callback,
+          // which the embedded app can close via window.close() and the
+          // parent Reputably shell picks up the new connection on its
+          // next data refresh.
+          if (typeof window !== 'undefined' && window.self !== window.top) {
+            window.open(url, '_blank');
+            return;
+          }
+
           window.location.href = url;
         };
         if (isWeb3) {

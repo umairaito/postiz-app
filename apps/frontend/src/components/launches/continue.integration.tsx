@@ -39,9 +39,27 @@ export const ContinueIntegration: FC<{
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Reputably: when Posting is iframed, OAuth was opened in a popup tab
+  // (see add.provider.component.tsx). On successful integration, signal the
+  // parent Reputably shell to refresh and close ourselves — avoids leaving a
+  // dead postiz tab open after the user connects an account.
+  const closeIfPopup = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    if (!window.opener || window.opener === window) return false;
+    try {
+      window.opener.postMessage({ type: 'postiz-integration-connected' }, '*');
+    } catch {
+      // cross-origin postMessage blocked — fine, opener will catch up via a
+      // normal revalidation anyway.
+    }
+    window.close();
+    return true;
+  }, []);
+
   // Helper to handle navigation - redirects if logged or returnURL exists, otherwise shows inline
   const navigateOrShow = useCallback(
     (path: string, returnURL: string | undefined, successMessage: string) => {
+      if (closeIfPopup()) return;
       if (returnURL) {
         // If returnURL exists, always redirect to it with the path params
         const params = path.includes('?') ? path.split('?')[1] : '';
@@ -54,7 +72,7 @@ export const ContinueIntegration: FC<{
         setSuccessState({ message: successMessage });
       }
     },
-    [logged, push]
+    [logged, push, closeIfPopup]
   );
   const modifiedParams = useMemo(() => {
     if (provider === 'mewe') {
