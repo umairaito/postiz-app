@@ -58,7 +58,7 @@ export const useMenuItem = () => {
     },
     {
       name: 'Agent',
-      hide: true, // Reputably: Posting is a scoped module — no AI agent surface.
+      // Reputably: re-enabled. Uses OPENAI_API_KEY from the deployment env.
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
