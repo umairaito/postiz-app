@@ -1,8 +1,13 @@
 ---
 name: Build
 
+# Upstream CI — compile-check only, produces no artifacts. Pinned to main so
+# it doesn't fire on every push to reputably-rebrand (our image build lives
+# in build-reputably.yml). pr-quality.yml still covers PR-time checks.
 on:
   push:
+    branches:
+      - main
 
 jobs:
   build:
