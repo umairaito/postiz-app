@@ -23,9 +23,10 @@ export class OpenaiService {
       await openai.images.generate({
         prompt,
         response_format: isUrl ? 'url' : 'b64_json',
-        model: 'dall-e-3',
+        model: 'gpt-image-2',
+        quality: 'medium',
         ...(isVertical ? { size: '1024x1792' } : {}),
-      })
+      } as any)
     ).data[0];
 
     return isUrl ? generate.url : generate.b64_json;
@@ -35,7 +36,7 @@ export class OpenaiService {
     return (
       (
         await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+          model: 'gpt-5.4-nano',
           messages: [
             {
               role: 'system',
@@ -56,7 +57,7 @@ export class OpenaiService {
     return (
       (
         await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+          model: 'gpt-5.4-nano',
           messages: [
             {
               role: 'system',
@@ -90,7 +91,7 @@ export class OpenaiService {
           ],
           n: 5,
           temperature: 1,
-          model: 'gpt-4.1',
+          model: 'gpt-5.4-nano',
         }),
         openai.chat.completions.create({
           messages: [
@@ -106,7 +107,7 @@ export class OpenaiService {
           ],
           n: 5,
           temperature: 1,
-          model: 'gpt-4.1',
+          model: 'gpt-5.4-nano',
         }),
       ])
     ).flatMap((p) => p.choices);
@@ -144,7 +145,7 @@ export class OpenaiService {
           content,
         },
       ],
-      model: 'gpt-4.1',
+      model: 'gpt-5.4-nano',
     });
 
     const { content: articleContent } = websiteContent.choices[0].message;
@@ -164,7 +165,7 @@ export class OpenaiService {
     const posts =
       (
         await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+          model: 'gpt-5.4-nano',
           messages: [
             {
               role: 'system',
@@ -197,7 +198,7 @@ export class OpenaiService {
               return (
                 (
                   await openai.chat.completions.parse({
-                    model: 'gpt-4.1',
+                    model: 'gpt-5.4-nano',
                     messages: [
                       {
                         role: 'system',
@@ -233,7 +234,7 @@ export class OpenaiService {
         const parse =
           (
             await openai.chat.completions.parse({
-              model: 'gpt-4.1',
+              model: 'gpt-5.4-nano',
               messages: [
                 {
                   role: 'system',
