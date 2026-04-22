@@ -37,7 +37,7 @@ const clientAndGmb = () => {
 export class GmbProvider extends SocialAbstract implements SocialProvider {
   override maxConcurrentJob = 3;
   identifier = 'gmb';
-  name = 'Google My Business';
+  name = 'Google Business Profile';
   isBetweenSteps = true;
   scopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -256,13 +256,25 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
                 );
                 const mediaData = await mediaResponse.json();
                 if (mediaData.mediaItems && mediaData.mediaItems.length > 0) {
-                  const profilePhoto = mediaData.mediaItems.find(
-                    (m: any) =>
-                      m.mediaFormat === 'PHOTO' &&
-                      m.locationAssociation?.category === 'PROFILE'
-                  );
-                  if (profilePhoto?.googleUrl) {
-                    photoUrl = profilePhoto.googleUrl;
+                  // GBP's /media endpoint categorises photos as LOGO / COVER /
+                  // PROFILE / EXTERIOR / INTERIOR / etc. The business logo
+                  // (what users think of as the "business logo") lives under
+                  // category=LOGO. Upstream only looked at PROFILE which is
+                  // the owner's personal photo, so most branded locations
+                  // came back with no logo. Prefer LOGO, fall back to
+                  // PROFILE, then COVER, then the first photo.
+                  const pickByCategory = (cat: string) =>
+                    mediaData.mediaItems.find(
+                      (m: any) =>
+                        m.mediaFormat === 'PHOTO' &&
+                        m.locationAssociation?.category === cat
+                    );
+                  const preferred =
+                    pickByCategory('LOGO') ||
+                    pickByCategory('PROFILE') ||
+                    pickByCategory('COVER');
+                  if (preferred?.googleUrl) {
+                    photoUrl = preferred.googleUrl;
                   } else if (mediaData.mediaItems[0]?.googleUrl) {
                     photoUrl = mediaData.mediaItems[0].googleUrl;
                   }
@@ -312,7 +324,8 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
     );
     const locationData = await locationResponse.json();
 
-    // Try to get profile photo
+    // Try to get the business logo — LOGO preferred over PROFILE, see the
+    // matching comment in pages() above.
     let photoUrl = '';
     try {
       const mediaResponse = await fetch(
@@ -325,13 +338,18 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
       );
       const mediaData = await mediaResponse.json();
       if (mediaData.mediaItems && mediaData.mediaItems.length > 0) {
-        const profilePhoto = mediaData.mediaItems.find(
-          (m: any) =>
-            m.mediaFormat === 'PHOTO' &&
-            m.locationAssociation?.category === 'PROFILE'
-        );
-        if (profilePhoto?.googleUrl) {
-          photoUrl = profilePhoto.googleUrl;
+        const pickByCategory = (cat: string) =>
+          mediaData.mediaItems.find(
+            (m: any) =>
+              m.mediaFormat === 'PHOTO' &&
+              m.locationAssociation?.category === cat
+          );
+        const preferred =
+          pickByCategory('LOGO') ||
+          pickByCategory('PROFILE') ||
+          pickByCategory('COVER');
+        if (preferred?.googleUrl) {
+          photoUrl = preferred.googleUrl;
         } else if (mediaData.mediaItems[0]?.googleUrl) {
           photoUrl = mediaData.mediaItems[0].googleUrl;
         }

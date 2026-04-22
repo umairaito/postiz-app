@@ -670,28 +670,52 @@ export const AddProviderComponent: FC<{
                 !item.customFields
               );
             })
-            .map((item) => (
+            // Reputably: we only ship Google Business Profile today. Sort
+            // GMB to the top of the grid and render every other provider in
+            // a disabled state so the UI shows the roadmap without letting
+            // anyone try to connect an unsupported platform.
+            .slice()
+            .sort((a, b) => {
+              const aGmb = a.identifier === 'google_my_business' ? -1 : 0;
+              const bGmb = b.identifier === 'google_my_business' ? -1 : 0;
+              return aGmb - bGmb;
+            })
+            .map((item) => {
+              const isEnabled = item.identifier === 'google_my_business';
+              return (
               <div
                 key={item.identifier}
-                onClick={getSocialLink(
-                  props.invite,
-                  item.identifier,
-                  item.isExternal,
-                  item.isWeb3,
-                  item.isChromeExtension,
-                  item.customFields
-                )}
+                onClick={
+                  isEnabled
+                    ? getSocialLink(
+                        props.invite,
+                        item.identifier,
+                        item.isExternal,
+                        item.isWeb3,
+                        item.isChromeExtension,
+                        item.customFields
+                      )
+                    : undefined
+                }
                 {...(!!item.toolTip
                   ? {
                       'data-tooltip-id': 'tooltip',
                       'data-tooltip-content': item.toolTip,
                     }
-                  : {})}
+                  : isEnabled
+                    ? {}
+                    : {
+                        'data-tooltip-id': 'tooltip',
+                        'data-tooltip-content': 'Coming soon',
+                      })}
                 className={clsx(
                   isMobile
                     ? 'flex-row h-[72px] p-[16px]'
                     : 'flex-col p-[10px] h-[100px] justify-center',
-                  'w-full text-[14px] rounded-[8px] bg-newTableHeader text-textColor relative items-center flex gap-[10px] cursor-pointer'
+                  'w-full text-[14px] rounded-[8px] bg-newTableHeader text-textColor relative items-center flex gap-[10px]',
+                  isEnabled
+                    ? 'cursor-pointer'
+                    : 'opacity-40 grayscale cursor-not-allowed'
                 )}
               >
                 <div>
@@ -732,7 +756,8 @@ export const AddProviderComponent: FC<{
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
         </div>
       </div>
     </div>
