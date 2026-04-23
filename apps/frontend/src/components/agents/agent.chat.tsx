@@ -42,7 +42,17 @@ export const AgentChat: FC = () => {
 
   return (
     <CopilotKit
-      {...(params.id === 'new' ? {} : { threadId: params.id })}
+      // We deliberately don't forward params.id as threadId here. When set,
+      // CopilotKit posts to /copilot/agent on mount to resume agent state
+      // for that thread; if the runtime doesn't return the historical
+      // messages (it doesn't, currently — Mastra memory ↔ CopilotKit handoff
+      // isn't wired) it sets messages to [] right after our LoadMessages
+      // writes them in. User saw "thread loads briefly then reverts to new
+      // chat". Without threadId, CopilotKit treats this as a fresh client
+      // session and stops fighting LoadMessages for setMessages. Trade-off:
+      // new messages here start a new agent thread rather than extending
+      // the historical one — re-introduce threadId once the resume path
+      // returns the past turns instead of an empty payload.
       credentials="include"
       runtimeUrl={backendUrl + '/copilot/agent'}
       showDevConsole={false}
