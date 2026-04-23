@@ -5,11 +5,12 @@ import {
   ToolMessage,
 } from '@langchain/core/messages';
 import { END, START, StateGraph } from '@langchain/langgraph';
-import { ChatOpenAI, DallEAPIWrapper } from '@langchain/openai';
+import { ChatOpenAI } from '@langchain/openai';
 import { TavilySearch } from '@langchain/tavily';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import dayjs from 'dayjs';
+import OpenAI from 'openai';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 import { z } from 'zod';
 import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/media.service';
@@ -27,10 +28,26 @@ const model = new ChatOpenAI({
   temperature: 0.7,
 });
 
-const dalle = new DallEAPIWrapper({
+// langchain's DallEAPIWrapper always sends `response_format: 'url'` which
+// the new gpt-image-* family rejects ("Unknown parameter:
+// 'response_format'"). Call OpenAI directly and hand back a data URI —
+// uploadSimple() fetch()'s that fine and writes it to local storage.
+const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-image-1.5',
 });
+
+async function generateImageDataUri(prompt: string): Promise<string> {
+  const result = await openaiClient.images.generate({
+    prompt,
+    model: 'gpt-image-1.5',
+    size: '1024x1536',
+    quality: 'medium',
+    n: 1,
+  });
+  const b64 = result.data?.[0]?.b64_json;
+  if (!b64) throw new Error('OpenAI returned no image data');
+  return `data:image/png;base64,${b64}`;
+}
 
 interface WorkflowChannelsState {
   messages: BaseMessage[];
@@ -320,7 +337,7 @@ export class AgentGraphService {
 
     const newContent = await Promise.all(
       (state.content || []).map(async (p) => {
-        const image = await dalle.invoke(p.prompt!);
+        const image = await generateImageDataUri(p.prompt!);
         return {
           ...p,
           image,
