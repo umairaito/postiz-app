@@ -123,11 +123,39 @@ export class CopilotController {
     const mastra = await this._mastraService.mastra();
     const memory = await mastra.getAgent('postiz').getMemory();
     try {
-      return await memory.recall({
+      const result = await memory.recall({
         resourceId: organization.id,
         threadId,
       });
-    } catch (err) {
+      // Mastra v2 stores message bodies as { format: 2, parts: [...] }
+      // where parts is a mix of { type: 'text', text } / 'step-start' /
+      // 'tool-invocation' / etc. The frontend's LoadMessages reads
+      // `p.content.content` as a flat string, so we collapse the parts
+      // array down to plain text here. Tool-invocation and step-start
+      // parts are dropped — they're rendering noise without their
+      // result payloads, which the chat UI doesn't display anyway.
+      const flatten = (raw: any): string => {
+        if (typeof raw === 'string') return raw;
+        if (raw?.format === 2 && Array.isArray(raw.parts)) {
+          return raw.parts
+            .filter((p: any) => p?.type === 'text' && typeof p.text === 'string')
+            .map((p: any) => p.text)
+            .join('\n')
+            .trim();
+        }
+        if (typeof raw?.content === 'string') return raw.content;
+        return '';
+      };
+      return {
+        messages: (result.messages || [])
+          .map((m: any) => ({
+            role: m.role,
+            content: { content: flatten(m.content) },
+          }))
+          .filter((m: any) => m.content.content.length > 0),
+      };
+    } catch (err: any) {
+      Logger.error(`[copilot] memory.recall(thread=${threadId}) failed: ${err?.message || err}`);
       return { messages: [] };
     }
   }
